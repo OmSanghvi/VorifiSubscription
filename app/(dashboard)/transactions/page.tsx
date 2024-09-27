@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { useBulkCreateTransactions } from "@/features/transactions/api/use-bulk-create-transactions";
 import Chat from "@/components/chat";
 import AIChatPanel from "@/components/AIPanel";
+import AIPanel from "@/components/AIPanel";
 
 enum VARIANTS {
     LIST = "LIST",
@@ -113,7 +114,7 @@ const TransactionsPage = () => {
                     }} disabled = {isDisabled}/>
                 </CardContent>
             </Card>
-            <AIChatPanel/>
+            <Chat/>
         </div>
      );
 }
