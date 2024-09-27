@@ -71,8 +71,6 @@ const InputForm = ({
             images: JSON.stringify(images),
           },
         });
-
-        addMessage(newMessage); // Add the new message
       }}
       className="w-full flex flex-row gap-2 items-center h-full mt-5"
     >

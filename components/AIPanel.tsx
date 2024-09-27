@@ -1,4 +1,5 @@
 "use client"; // Ensure to use client-side rendering if needed
+
 import React, { useState, ChangeEvent, FormEvent } from "react";
 import InputForm from "@/components/inputForm"; // Adjust the import based on your structure
 import Messages from "@/components/messages"; // Assuming you have a Messages component to render the messages
@@ -13,7 +14,7 @@ interface AIPanelProps {
 const AIPanel: React.FC<AIPanelProps> = ({ isOpen, onClose }) => {
   const [messages, setMessages] = useState<Message[]>([]); // State to hold messages
   const [inputMessage, setInputMessage] = useState(""); // State to manage the input message
-  const { isLoading, stop } = useChat({ api: "api/genai" }); // Your useChat hook
+  const { isLoading, stop } = useChat({ api: "api/ai" }); // Your useChat hook
 
   // Function to handle adding messages
   const addMessage = (newMessage: Message) => {
@@ -41,7 +42,7 @@ const AIPanel: React.FC<AIPanelProps> = ({ isOpen, onClose }) => {
     setInputMessage("");
 
     // Send the message to the API
-    const response = await fetch("/api/genai", {
+    const response = await fetch("/api/ai", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

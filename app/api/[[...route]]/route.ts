@@ -5,6 +5,7 @@ import categories from "./categories";
 import transactions from "./transactions";
 import summary from './summary';
 import plaid from './plaid';
+import ai from './ai';
 
 export const runtime = 'edge'
 
@@ -16,6 +17,7 @@ const routes = app
     .route("/categories", categories)
     .route("/transactions", transactions)
     .route("/plaid", plaid)
+    .route("/ai", ai);
     
 
 export const GET = handle(app);
