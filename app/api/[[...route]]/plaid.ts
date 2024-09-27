@@ -117,7 +117,7 @@ const app = new Hono()
                 user: {
                     client_user_id: auth.userId,
                 },
-                client_name: "Finance Tracker SaaS",
+                client_name: "Vorifi",
                 products: [Products.Transactions],
                 country_codes: [CountryCode.Us],
                 language: "en",

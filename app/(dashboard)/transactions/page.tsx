@@ -16,6 +16,8 @@ import { transactions as transactionsSchema } from "@/db/schema";
 import { useSelectAccount } from "@/features/accounts/hooks/use-select-account";
 import { toast } from "sonner";
 import { useBulkCreateTransactions } from "@/features/transactions/api/use-bulk-create-transactions";
+import Chat from "@/components/chat";
+import AIChatPanel from "@/components/AIPanel";
 
 enum VARIANTS {
     LIST = "LIST",
@@ -111,6 +113,7 @@ const TransactionsPage = () => {
                     }} disabled = {isDisabled}/>
                 </CardContent>
             </Card>
+            <AIChatPanel/>
         </div>
      );
 }

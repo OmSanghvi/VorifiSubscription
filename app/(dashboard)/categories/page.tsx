@@ -9,6 +9,7 @@ import { DataTable } from "@/components/data-table";
 import { useGetCategories } from "@/features/categories/api/use-get-categories";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBulkDeleteCategories } from "@/features/categories/api/use-bulk-delete-categories";
+import Chat from "@/components/chat";
 
 
 const CategoriesPage = () => {
@@ -52,6 +53,7 @@ const CategoriesPage = () => {
                     }} disabled = {isDisabled}/>
                 </CardContent>
             </Card>
+            <Chat/>
         </div>
      );
 }
