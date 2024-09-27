@@ -1,9 +1,9 @@
-"use client"; // Ensure to use client-side rendering if needed
+"use client";
 
 import React, { useState, ChangeEvent, FormEvent } from "react";
-import InputForm from "@/components/inputForm"; // Adjust the import based on your structure
-import Messages from "@/components/messages"; // Assuming you have a Messages component to render the messages
-import { Message, useChat } from "ai/react"; // Adjust import as per your setup
+import InputForm from "@/components/inputForm";
+import Messages from "@/components/messages";
+import { Message, useChat } from "ai/react";
 import { ChatRequestOptions } from "ai";
 
 interface AIPanelProps {
@@ -12,53 +12,47 @@ interface AIPanelProps {
 }
 
 const AIPanel: React.FC<AIPanelProps> = ({ isOpen, onClose }) => {
-  const [messages, setMessages] = useState<Message[]>([]); // State to hold messages
-  const [inputMessage, setInputMessage] = useState(""); // State to manage the input message
-  const { isLoading, stop } = useChat({ api: "api/ai" }); // Your useChat hook
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputMessage, setInputMessage] = useState("");
+  const { isLoading, stop } = useChat({ api: "api/ai" });
 
-  // Function to handle adding messages
   const addMessage = (newMessage: Message) => {
     setMessages((prevMessages) => [...prevMessages, newMessage]);
   };
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setInputMessage(e.target.value); // Update input state
+    setInputMessage(e.target.value);
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>, chatRequestOptions?: ChatRequestOptions) => {
     e.preventDefault();
 
-    // Create the new message
     const newMessage: Message = {
-      id: `${Date.now()}`, // Unique ID (consider using a proper UUID if necessary)
+      id: `${Date.now()}`,
       content: inputMessage,
-      role: "user", // Assuming the role is "user" for the input
+      role: "user",
     };
 
-    // Add the new message to state
     addMessage(newMessage);
 
-    // Reset the input field
     setInputMessage("");
 
-    // Send the message to the API
     const response = await fetch("/api/ai", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        messages: [...messages, newMessage], // Include previous messages and new message
+        messages: [...messages, newMessage],
       }),
     });
 
     if (response.ok) {
       const data = await response.json();
-      // Add AI response message
       addMessage({
         role: "assistant",
         content: data.text,
-        id: `${Date.now()}`, // You can manage ID generation better as needed
+        id: `${Date.now()}`,
       });
     } else {
       console.error("Failed to send message:", response.statusText);
@@ -73,15 +67,15 @@ const AIPanel: React.FC<AIPanelProps> = ({ isOpen, onClose }) => {
         X
       </button>
       <div className="overflow-y-auto h-64">
-        <Messages messages={messages} isLoading={isLoading} /> {/* Render messages */}
+        <Messages messages={messages} isLoading={isLoading} /> 
       </div>
       <InputForm
-        input={inputMessage} // Current input value
-        handleInputChange={handleInputChange} // Function to handle input change
-        handleSubmit={handleSubmit} // Function to handle form submission
-        isLoading={isLoading} // Loading state
-        stop={stop} // Stop function if needed
-        addMessage={addMessage} // Function to add new message
+        input={inputMessage}
+        handleInputChange={handleInputChange}
+        handleSubmit={handleSubmit}
+        isLoading={isLoading}
+        stop={stop}
+        addMessage={addMessage}
       />
     </div>
   );

@@ -9,15 +9,11 @@ import { differenceInDays, parse, subDays } from "date-fns";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-
-// IMPORTANT! Set the runtime to edge
 export const runtime = "edge";
 
 const app = new Hono();
 
 app.use(clerkMiddleware());
-
-// GET request handler
 export const GET = app.get(
   "/",
   clerkMiddleware(),
@@ -110,8 +106,6 @@ export const GET = app.get(
     });
   }
 );
-
-// POST request handler
 export const POST = app.post(async (c) => {
   try {
     const reqBody = await c.req.json();
@@ -141,8 +135,6 @@ export const POST = app.post(async (c) => {
     const userContext = `You are a financial advisor assisting a user with their finances. They have an income of ${income} and expenses of ${expenses} per month.`;
 
     let promptWithParts: (string | { inlineData: { data: string; mimeType: string } })[] = [userContext, ...messages.map(message => message.content)];
-
-    // Add image parts if present
     if (imageParts.length > 0) {
       promptWithParts = promptWithParts.concat(imageParts);
     }
@@ -169,8 +161,6 @@ export const POST = app.post(async (c) => {
     return new Response("Internal Server Error", { status: 500 });
   }
 });
-
-// Helper function to convert images to Google AI parts
 function filesArrayToGenerativeParts(images: string[]) {
   return images.map((imageData) => ({
     inlineData: {
@@ -182,8 +172,6 @@ function filesArrayToGenerativeParts(images: string[]) {
     },
   }));
 }
-
-// Function to fetch financial data for the user
 async function fetchFinancialData(userId: string, startDate: Date, endDate: Date) {
   return await db.select({
     income: sql`SUM(CASE WHEN ${transactions.amount} >= 0 THEN ${transactions.amount} ELSE 0 END)`.mapWith(Number),
@@ -202,4 +190,4 @@ async function fetchFinancialData(userId: string, startDate: Date, endDate: Date
   );
 }
 
-export default app;  // This line can be removed if you do not need a default export
+export default app;
