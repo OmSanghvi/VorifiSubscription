@@ -1,4 +1,4 @@
-import { integer, pgTable,text, timestamp } from "drizzle-orm/pg-core";
+import { integer, pgTable,serial,text, timestamp, varchar } from "drizzle-orm/pg-core";
 import {createInsertSchema} from "drizzle-zod";
 import {relations} from "drizzle-orm";
 import {z} from "zod";
@@ -63,3 +63,20 @@ export const connectedBanks = pgTable("connected_banks", {
     userId: text("userId").notNull(),
     accessToken: text("access_token").notNull(),
   });
+
+  // New ai_responses table
+  export const aiResponses = pgTable("ai_responses", {
+    id: serial("id").primaryKey(),
+    userId: varchar("user_id").notNull(),
+    responseText: varchar("response_text").notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+  });
+
+export const aiResponsesRelations = relations(aiResponses, ({ one }) => ({
+    user: one(accounts, {
+        fields: [aiResponses.userId],
+        references: [accounts.id],
+    }),
+}));
+
+export const insertAIResponseSchema = createInsertSchema(aiResponses);

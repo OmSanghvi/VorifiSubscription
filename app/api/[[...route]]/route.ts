@@ -17,7 +17,7 @@ const routes = app
     .route("/categories", categories)
     .route("/transactions", transactions)
     .route("/plaid", plaid)
-    .route("/ai", ai);
+    .route("/ai", ai)
     
 
 export const GET = handle(app);

@@ -11,183 +11,208 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 export const runtime = "edge";
 
+
 const app = new Hono();
+
 
 app.use(clerkMiddleware());
 export const GET = app.get(
-  "/",
-  clerkMiddleware(),
-  zValidator("query", z.object({
-    from: z.string().optional(),
-    to: z.string().optional(),
-    accountId: z.string().optional()
-  })),
-  async (c) => {
-    const auth = getAuth(c);
-    const { from, to, accountId } = c.req.valid("query");
-    if (!auth?.userId) {
-      return c.json({ error: "Unauthorized" }, 401);
-    }
+ "/",
+ clerkMiddleware(),
+ zValidator("query", z.object({
+   from: z.string().optional(),
+   to: z.string().optional(),
+   accountId: z.string().optional()
+ })),
+ async (c) => {
+   const auth = getAuth(c);
+   const { from, to, accountId } = c.req.valid("query");
+   if (!auth?.userId) {
+     return c.json({ error: "Unauthorized" }, 401);
+   }
 
-    const defaultTo = new Date();
-    const defaultFrom = subDays(defaultTo, 30);
-    const startDate = from ? parse(from, "yyyy-MM-dd", new Date()) : defaultFrom;
-    const endDate = to ? parse(to, "yyyy-MM-dd", new Date()) : defaultTo;
 
-    const periodLength = differenceInDays(endDate, startDate) + 1;
-    const lastPeriodStart = subDays(startDate, periodLength);
-    const lastPeriodEnd = subDays(endDate, periodLength);
+   const defaultTo = new Date();
+   const defaultFrom = subDays(defaultTo, 30);
+   const startDate = from ? parse(from, "yyyy-MM-dd", new Date()) : defaultFrom;
+   const endDate = to ? parse(to, "yyyy-MM-dd", new Date()) : defaultTo;
 
-    const [currentPeriod] = await fetchFinancialData(auth.userId, startDate, endDate);
-    const [lastPeriod] = await fetchFinancialData(auth.userId, lastPeriodStart, lastPeriodEnd);
 
-    const incomeChange = calculatePercentChange(currentPeriod.income, lastPeriod.income);
-    const expensesChange = calculatePercentChange(currentPeriod.expenses, lastPeriod.expenses);
-    const remainingChange = calculatePercentChange(currentPeriod.remaining, lastPeriod.remaining);
+   const periodLength = differenceInDays(endDate, startDate) + 1;
+   const lastPeriodStart = subDays(startDate, periodLength);
+   const lastPeriodEnd = subDays(endDate, periodLength);
 
-    const category = await db
-      .select({
-        name: categories.name,
-        value: sql`SUM(ABS(${transactions.amount}))`.mapWith(Number),
-      }).from(transactions)
-      .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-      .innerJoin(categories, eq(transactions.categoryId, categories.id))
-      .where(
-        and(
-          accountId ? eq(transactions.accountId, accountId) : undefined,
-          eq(accounts.userId, auth.userId),
-          lt(transactions.amount, 0),
-          gte(transactions.date, startDate),
-          lte(transactions.date, endDate)
-        )
-      ).groupBy(categories.name)
-      .orderBy(desc(sql`SUM(ABS(${transactions.amount}))`));
 
-    const topCategories = category.slice(0, 3);
-    const otherCategories = category.slice(3);
-    const otherSum = otherCategories.reduce((sum, current) => sum + current.value, 0);
-    const finalCategories = [...topCategories];
+   const [currentPeriod] = await fetchFinancialData(auth.userId, startDate, endDate);
+   const [lastPeriod] = await fetchFinancialData(auth.userId, lastPeriodStart, lastPeriodEnd);
 
-    if (otherCategories.length > 0) {
-      finalCategories.push({
-        name: "Other",
-        value: otherSum,
-      });
-    }
 
-    const activeDays = await db.select({
-      date: transactions.date,
-      income: sql`SUM(CASE WHEN ${transactions.amount} >= 0 THEN ${transactions.amount} ELSE 0 END)`.mapWith(Number),
-      expenses: sql`SUM(CASE WHEN ${transactions.amount} < 0 THEN ABS(${transactions.amount}) ELSE 0 END)`.mapWith(Number),
-    }).from(transactions)
-      .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-      .where(
-        and(
-          accountId ? eq(transactions.accountId, accountId) : undefined,
-          eq(accounts.userId, auth.userId),
-          gte(transactions.date, startDate),
-          lte(transactions.date, endDate)
-        )
-      ).groupBy(transactions.date).orderBy(transactions.date);
+   const incomeChange = calculatePercentChange(currentPeriod.income, lastPeriod.income);
+   const expensesChange = calculatePercentChange(currentPeriod.expenses, lastPeriod.expenses);
+   const remainingChange = calculatePercentChange(currentPeriod.remaining, lastPeriod.remaining);
 
-    const days = fillMissingDays(activeDays, startDate, endDate);
 
-    return c.json({
-      data: {
-        remainingAmount: currentPeriod.remaining,
-        remainingChange,
-        incomeAmount: currentPeriod.income,
-        incomeChange,
-        expensesAmount: currentPeriod.expenses,
-        expensesChange,
-        categories: finalCategories,
-        days,
-      }
-    });
-  }
+   const category = await db
+     .select({
+       name: categories.name,
+       value: sql`SUM(ABS(${transactions.amount}))`.mapWith(Number),
+     }).from(transactions)
+     .innerJoin(accounts, eq(transactions.accountId, accounts.id))
+     .innerJoin(categories, eq(transactions.categoryId, categories.id))
+     .where(
+       and(
+         accountId ? eq(transactions.accountId, accountId) : undefined,
+         eq(accounts.userId, auth.userId),
+         lt(transactions.amount, 0),
+         gte(transactions.date, startDate),
+         lte(transactions.date, endDate)
+       )
+     ).groupBy(categories.name)
+     .orderBy(desc(sql`SUM(ABS(${transactions.amount}))`));
+
+
+   const topCategories = category.slice(0, 3);
+   const otherCategories = category.slice(3);
+   const otherSum = otherCategories.reduce((sum, current) => sum + current.value, 0);
+   const finalCategories = [...topCategories];
+
+
+   if (otherCategories.length > 0) {
+     finalCategories.push({
+       name: "Other",
+       value: otherSum,
+     });
+   }
+
+
+   const activeDays = await db.select({
+     date: transactions.date,
+     income: sql`SUM(CASE WHEN ${transactions.amount} >= 0 THEN ${transactions.amount} ELSE 0 END)`.mapWith(Number),
+     expenses: sql`SUM(CASE WHEN ${transactions.amount} < 0 THEN ABS(${transactions.amount}) ELSE 0 END)`.mapWith(Number),
+   }).from(transactions)
+     .innerJoin(accounts, eq(transactions.accountId, accounts.id))
+     .where(
+       and(
+         accountId ? eq(transactions.accountId, accountId) : undefined,
+         eq(accounts.userId, auth.userId),
+         gte(transactions.date, startDate),
+         lte(transactions.date, endDate)
+       )
+     ).groupBy(transactions.date).orderBy(transactions.date);
+
+
+   const days = fillMissingDays(activeDays, startDate, endDate);
+
+
+   return c.json({
+     data: {
+       remainingAmount: currentPeriod.remaining,
+       remainingChange,
+       incomeAmount: currentPeriod.income,
+       incomeChange,
+       expensesAmount: currentPeriod.expenses,
+       expensesChange,
+       categories: finalCategories,
+       days,
+     }
+   });
+ }
 );
 export const POST = app.post(async (c) => {
-  try {
-    const reqBody = await c.req.json();
-    const images: string[] = reqBody.data?.images ? JSON.parse(reqBody.data.images) : [];
-    const imageParts = filesArrayToGenerativeParts(images);
-    const messages: Message[] = reqBody.messages;
+ try {
+   const reqBody = await c.req.json();
+   const images: string[] = reqBody.data?.images ? JSON.parse(reqBody.data.images) : [];
+   const imageParts = filesArrayToGenerativeParts(images);
+   const messages: Message[] = reqBody.messages;
 
-    if (!messages || messages.length === 0) {
-      throw new Error("No content is provided for sending chat message.");
-    }
 
-    const auth = getAuth(c);
-    if (!auth?.userId) {
-      throw new Error("Unauthorized");
-    }
+   if (!messages || messages.length === 0) {
+     throw new Error("No content is provided for sending chat message.");
+   }
 
-    const defaultTo = new Date();
-    const defaultFrom = subDays(defaultTo, 30);
-    const startDate = defaultFrom;
-    const endDate = defaultTo;
 
-    const [financialData] = await fetchFinancialData(auth.userId, startDate, endDate);
+   const auth = getAuth(c);
+   if (!auth?.userId) {
+     throw new Error("Unauthorized");
+   }
 
-    const income = convertAmountFromMiliunits(financialData.income || 0);
-    const expenses = convertAmountFromMiliunits(financialData.expenses || 0);
 
-    const userContext = `You are a financial advisor assisting a user with their finances. They have an income of ${income} and expenses of ${expenses} per month.`;
+   const defaultTo = new Date();
+   const defaultFrom = subDays(defaultTo, 30);
+   const startDate = defaultFrom;
+   const endDate = defaultTo;
 
-    let promptWithParts: (string | { inlineData: { data: string; mimeType: string } })[] = [userContext, ...messages.map(message => message.content)];
-    if (imageParts.length > 0) {
-      promptWithParts = promptWithParts.concat(imageParts);
-    }
 
-    if (promptWithParts.length === 0) {
-      throw new Error("No valid content to send to the AI.");
-    }
+   const [financialData] = await fetchFinancialData(auth.userId, startDate, endDate);
 
-    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
-    const model = genAI.getGenerativeModel({
-      model: "tunedModels/financialadvicedataset-ljf12fi60qq1",
-    });
 
-    const streamingResponse = await model.generateContent(promptWithParts);
-    const responseText = streamingResponse.response.text();
+   const income = convertAmountFromMiliunits(financialData.income || 0);
+   const expenses = Math.abs(convertAmountFromMiliunits(financialData.expenses || 0));
 
-    return new Response(JSON.stringify({ text: responseText }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
 
-  } catch (error) {
-    console.error("Error in POST handler:", error);
-    return new Response("Internal Server Error", { status: 500 });
-  }
+   const userContext = `You are a financial advisor assisting a user with their finances. They have an income of ${income} and expenses of ${expenses} per month.`;
+
+
+   let promptWithParts: (string | { inlineData: { data: string; mimeType: string } })[] = [userContext, ...messages.map(message => message.content)];
+   if (imageParts.length > 0) {
+     promptWithParts = promptWithParts.concat(imageParts);
+   }
+
+
+   if (promptWithParts.length === 0) {
+     throw new Error("No valid content to send to the AI.");
+   }
+
+
+   const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
+   const model = genAI.getGenerativeModel({
+     model: "tunedModels/financialadvicedataset-ljf12fi60qq1",
+   });
+
+
+   const streamingResponse = await model.generateContent(promptWithParts);
+   const responseText = streamingResponse.response.text();
+
+
+   return new Response(JSON.stringify({ text: responseText }), {
+     status: 200,
+     headers: { "Content-Type": "application/json" },
+   });
+
+
+ } catch (error) {
+   console.error("Error in POST handler:", error);
+   return new Response("Internal Server Error", { status: 500 });
+ }
 });
 function filesArrayToGenerativeParts(images: string[]) {
-  return images.map((imageData) => ({
-    inlineData: {
-      data: imageData.split(",")[1],
-      mimeType: imageData.substring(
-        imageData.indexOf(":") + 1,
-        imageData.lastIndexOf(";")
-      ),
-    },
-  }));
+ return images.map((imageData) => ({
+   inlineData: {
+     data: imageData.split(",")[1],
+     mimeType: imageData.substring(
+       imageData.indexOf(":") + 1,
+       imageData.lastIndexOf(";")
+     ),
+   },
+ }));
 }
 async function fetchFinancialData(userId: string, startDate: Date, endDate: Date) {
-  return await db.select({
-    income: sql`SUM(CASE WHEN ${transactions.amount} >= 0 THEN ${transactions.amount} ELSE 0 END)`.mapWith(Number),
-    expenses: sql`SUM(CASE WHEN ${transactions.amount} < 0 THEN ${transactions.amount} ELSE 0 END)`.mapWith(Number),
-    remaining: sum(transactions.amount).mapWith(Number),
-  })
-  .from(transactions)
-  .innerJoin(accounts,
-    eq(transactions.accountId, accounts.id)
-  ).where(
-    and(
-      eq(accounts.userId, userId),
-      gte(transactions.date, startDate),
-      lte(transactions.date, endDate)
-    )
-  );
+ return await db.select({
+   income: sql`SUM(CASE WHEN ${transactions.amount} >= 0 THEN ${transactions.amount} ELSE 0 END)`.mapWith(Number),
+   expenses: sql`SUM(CASE WHEN ${transactions.amount} < 0 THEN ${transactions.amount} ELSE 0 END)`.mapWith(Number),
+   remaining: sum(transactions.amount).mapWith(Number),
+ })
+ .from(transactions)
+ .innerJoin(accounts,
+   eq(transactions.accountId, accounts.id)
+ ).where(
+   and(
+     eq(accounts.userId, userId),
+     gte(transactions.date, startDate),
+     lte(transactions.date, endDate)
+   )
+ );
 }
+
 
 export default app;

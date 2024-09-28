@@ -36,6 +36,13 @@
       "when": 1726860787629,
       "tag": "0004_little_captain_america",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1727479880368,
+      "tag": "0005_daily_bruce_banner",
+      "breakpoints": true
     }
   ]
 }

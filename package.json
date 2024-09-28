@@ -16,6 +16,8 @@
     "@ai-sdk/openai": "^0.0.61",
     "@clerk/backend": "^1.8.0",
     "@clerk/nextjs": "^5.3.2",
+    "@fortawesome/free-solid-svg-icons": "^6.6.0",
+    "@fortawesome/react-fontawesome": "^0.2.2",
     "@google-ai/generativelanguage": "^2.6.0",
     "@google/generative-ai": "^0.19.0",
     "@hono/clerk-auth": "^2.0.0",
