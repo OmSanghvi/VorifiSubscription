@@ -1,8 +1,12 @@
+"use client"
 import Image from "next/image";
 import {Loader2} from 'lucide-react'
 import { SignUp, ClerkLoaded,ClerkLoading } from '@clerk/nextjs'
+import { useRouter } from 'next/navigation';
+import { Button } from "@/components/ui/button";
 
 export default function Page() {
+  const router = useRouter();
   return (
     <div className = "min-h-screen grid grid-cols-1 lg:grid-cols-2">
       <div className = "h-full lg:flex flex-col items-center justify-center px-4">
@@ -26,6 +30,13 @@ export default function Page() {
       <div className='h-full bg-blue-600 lg:flex items-center justify-center'>
         <Image src = "/logo.svg" height = {100} width = {100} alt = "Logo"/>
       </div>
+      {/* Button in the bottom left */}
+      <Button
+        className="absolute bottom-4 left-4 bg-blue-600 text-white px-4 py-2 rounded"
+        onClick={() => router.push('/home')}
+      >
+        Go to Home
+      </Button>
     </div>
 );
 }
