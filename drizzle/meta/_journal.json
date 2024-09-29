@@ -5,43 +5,8 @@
     {
       "idx": 0,
       "version": "5",
-      "when": 1724456710397,
-      "tag": "0000_even_ikaris",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "5",
-      "when": 1724457201620,
-      "tag": "0001_fluffy_morgan_stark",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "5",
-      "when": 1724696066090,
-      "tag": "0002_bizarre_catseye",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "5",
-      "when": 1724715476113,
-      "tag": "0003_stiff_bishop",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "5",
-      "when": 1726860787629,
-      "tag": "0004_little_captain_america",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "5",
-      "when": 1727479880368,
-      "tag": "0005_daily_bruce_banner",
+      "when": 1727635773768,
+      "tag": "0000_giant_diamondback",
       "breakpoints": true
     }
   ]

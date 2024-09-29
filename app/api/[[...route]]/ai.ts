@@ -9,6 +9,7 @@ import { differenceInDays, parse, subDays } from "date-fns";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
+import { v4 as uuidv4 } from 'uuid';
 export const runtime = "edge";
 
 
@@ -213,6 +214,132 @@ async function fetchFinancialData(userId: string, startDate: Date, endDate: Date
    )
  );
 }
+app.post('/parse', async (c) => {
+  try {
+    const { text } = await c.req.json();
+
+    if (!text) {
+      return c.json({ error: 'No text provided' }, 400);
+    }
+
+    // Tokenize input text
+    const tokens = text.trim().split(/\s+/).map((token: string) => token.toLowerCase());
+    const numOfWords = tokens.length;
+    const counts = new Map<string, number>();
+
+    // Initialize object to hold extracted values
+    let accountName = "";
+    let categoryName = "";
+    let transactionData: {
+      date?: string;
+      account?: string;
+      category?: string;
+      amount?: number;
+      payee?: string;
+      notes?: string;
+    } = {};
+
+    for (let i = 0; i < tokens.length; i++) {
+      const token = tokens[i];
+
+      // Counting word frequencies
+      counts.set(token, (counts.get(token) || 0) + 1);
+
+      // Detect and process keywords
+      if ((token === 'add' && tokens[i + 1] === 'account:')||(token === 'create' && tokens[i + 1] === 'account:')) {
+        accountName = tokens[i + 2] || '';
+      } 
+      else if((token === 'add' && tokens[i + 1] === 'new' && tokens[i+2] === "account:")||(token === 'create' && tokens[i + 1] === 'new' && tokens[i+2] === "account:")){
+        accountName = tokens[i + 3] || '';
+      }
+      else if ((token === 'add' && tokens[i + 1] === 'category:')||(token === 'create' && tokens[i + 1] === 'category:')) {
+        categoryName = tokens[i + 2] || '';
+      } 
+      else if((token === 'add' && tokens[i + 1] === 'new' && tokens[i+2] === "category:")||(token === 'create' && tokens[i + 1] === 'new' && tokens[i+2] === "category:")){
+        categoryName = tokens[i + 3] || '';
+      }
+      else if (token === 'add' && tokens[i + 1]==='transaction:') {
+        transactionData = {
+          date: tokens[i + 2] || '',
+          account: tokens[i + 3] || '',
+          category: tokens[i + 4] || '',
+          amount: parseFloat(tokens[i + 5]) || 0,
+          payee: tokens[i + 6] || '',
+          notes: tokens.slice(i + 7).join(' ') // Capture any remaining words as notes
+        };
+      } else if (token === 'date') {
+        transactionData.date = tokens[i + 1] || '';
+      } else if (token === 'amount') {
+        transactionData.amount = parseFloat(tokens[i + 1]) || 0;
+      } else if (token === 'payee') {
+        transactionData.payee = tokens[i + 1] || '';
+      }
+    }
+
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    // Insert account into the database if provided
+    if (accountName) {
+      await db.insert(accounts).values({
+        id: uuidv4(), // Generate or assign the ID here
+        name: accountName,
+        userId: auth.userId // Associate with the user
+      });
+    }
+
+    // Insert category into the database if provided
+    if (categoryName) {
+      await db.insert(categories).values({
+        id: uuidv4(), // Generate or assign the ID here
+        name: categoryName,
+        userId: auth.userId // Associate with the user if needed
+      });
+    }
+
+    // Insert transaction into the database if the required fields are present
+    if (transactionData.date && transactionData.account && transactionData.category && transactionData.amount && transactionData.payee) {
+      const account = await db.select({ id: accounts.id })
+        .from(accounts)
+        .where(
+          and(
+            eq(accounts.name, transactionData.account),
+            eq(accounts.userId, auth.userId)
+          )
+        )
+        .limit(1);
+
+      const category = await db.select({ id: categories.id })
+        .from(categories)
+        .where(
+          and(
+            eq(categories.name, transactionData.category),
+            eq(categories.userId, auth.userId)
+          )
+        )
+        .limit(1);
+
+      await db.insert(transactions).values({
+        id: uuidv4(), // Generate or assign the ID here
+        date: new Date(transactionData.date),
+        accountId: account[0]?.id,
+        categoryId: category[0]?.id,
+        amount: transactionData.amount,
+        payee: transactionData.payee,
+        notes: transactionData.notes,
+      });
+    }
+
+    return c.json({ message: 'Data processed successfully', accountName, categoryName, transactionData });
+  } catch (error) {
+    console.error(error);
+    return c.json({ error: 'Error processing request' }, 500);
+  }
+});
+
+
 
 
 export default app;

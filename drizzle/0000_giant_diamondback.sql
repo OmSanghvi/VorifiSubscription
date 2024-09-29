@@ -1,3 +1,30 @@
+CREATE TABLE IF NOT EXISTS "accounts" (
+	"id" text PRIMARY KEY NOT NULL,
+	"plaid_id" text,
+	"name" text NOT NULL,
+	"user_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "ai_responses" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"user_id" varchar NOT NULL,
+	"response_text" varchar NOT NULL,
+	"created_at" timestamp DEFAULT now()
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "categories" (
+	"id" text PRIMARY KEY NOT NULL,
+	"plaid_id" text,
+	"name" text NOT NULL,
+	"user_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "connected_banks" (
+	"id" text PRIMARY KEY NOT NULL,
+	"userId" text NOT NULL,
+	"access_token" text NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "transactions" (
 	"id" text PRIMARY KEY NOT NULL,
 	"amount" integer NOT NULL,
