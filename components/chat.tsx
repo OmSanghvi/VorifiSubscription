@@ -13,7 +13,7 @@ export default function Chat() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-12 text-lg">
+    <main className="flex min-h-screen flex-col items-center p-12 text-lg mb-0">
       <button
         onClick={togglePanel}
         className="fixed bottom-4 right-4 bg-blue-600 text-white py-2 px-4 rounded-full shadow-lg"

@@ -65,5 +65,10 @@
   }
   body {
     @apply bg-background text-foreground;
+    margin-bottom: 0;
+  }
+
+  h1, h2, h3, p, div {
+    margin-bottom: 0;
   }
 }

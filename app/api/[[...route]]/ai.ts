@@ -10,6 +10,8 @@ import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { v4 as uuidv4 } from 'uuid';
+import { useGetSummary } from "@/features/summary/api/use-get-summary";
+import { useRouter, useSearchParams } from "next/navigation";
 export const runtime = "edge";
 
 
@@ -119,7 +121,11 @@ export const GET = app.get(
    });
  }
 );
-export const POST = app.post(async (c) => {
+export const POST = app.post(clerkMiddleware(),zValidator("query",z.object({
+  from: z.string().optional(),
+  to: z.string().optional(),
+
+})),async (c) => {
  try {
    const reqBody = await c.req.json();
    const images: string[] = reqBody.data?.images ? JSON.parse(reqBody.data.images) : [];
@@ -136,13 +142,11 @@ export const POST = app.post(async (c) => {
    if (!auth?.userId) {
      throw new Error("Unauthorized");
    }
-
-
+   const {from,to} = c.req.valid("query");;
    const defaultTo = new Date();
    const defaultFrom = subDays(defaultTo, 30);
-   const startDate = defaultFrom;
-   const endDate = defaultTo;
-
+   const startDate = from ? parse(from, "yyyy-MM-dd", new Date()) : defaultFrom;
+   const endDate = to ? parse(to, "yyyy-MM-dd", new Date()) : defaultTo;
 
    const [financialData] = await fetchFinancialData(auth.userId, startDate, endDate);
 
