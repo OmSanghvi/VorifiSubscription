@@ -10,8 +10,6 @@ import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { v4 as uuidv4 } from 'uuid';
-import { useGetSummary } from "@/features/summary/api/use-get-summary";
-import { useRouter, useSearchParams } from "next/navigation";
 export const runtime = "edge";
 
 
@@ -225,13 +223,9 @@ app.post('/parse', async (c) => {
     if (!text) {
       return c.json({ error: 'No text provided' }, 400);
     }
-
-    // Tokenize input text
     const tokens = text.trim().split(/\s+/).map((token: string) => token.toLowerCase());
     const numOfWords = tokens.length;
     const counts = new Map<string, number>();
-
-    // Initialize object to hold extracted values
     let accountName = "";
     let categoryName = "";
     let transactionData: {
@@ -245,11 +239,7 @@ app.post('/parse', async (c) => {
 
     for (let i = 0; i < tokens.length; i++) {
       const token = tokens[i];
-
-      // Counting word frequencies
       counts.set(token, (counts.get(token) || 0) + 1);
-
-      // Detect and process keywords
       if ((token === 'add' && tokens[i + 1] === 'account:')||(token === 'create' && tokens[i + 1] === 'account:')) {
         accountName = tokens[i + 2] || '';
       } 
@@ -269,7 +259,7 @@ app.post('/parse', async (c) => {
           category: tokens[i + 4] || '',
           amount: parseFloat(tokens[i + 5]) || 0,
           payee: tokens[i + 6] || '',
-          notes: tokens.slice(i + 7).join(' ') // Capture any remaining words as notes
+          notes: tokens.slice(i + 7).join(' ')
         };
       } else if (token === 'date') {
         transactionData.date = tokens[i + 1] || '';
@@ -284,26 +274,20 @@ app.post('/parse', async (c) => {
     if (!auth?.userId) {
       return c.json({ error: 'Unauthorized' }, 401);
     }
-
-    // Insert account into the database if provided
     if (accountName) {
       await db.insert(accounts).values({
-        id: uuidv4(), // Generate or assign the ID here
+        id: uuidv4(),
         name: accountName,
-        userId: auth.userId // Associate with the user
+        userId: auth.userId
       });
     }
-
-    // Insert category into the database if provided
     if (categoryName) {
       await db.insert(categories).values({
-        id: uuidv4(), // Generate or assign the ID here
+        id: uuidv4(),
         name: categoryName,
-        userId: auth.userId // Associate with the user if needed
+        userId: auth.userId
       });
     }
-
-    // Insert transaction into the database if the required fields are present
     if (transactionData.date && transactionData.account && transactionData.category && transactionData.amount && transactionData.payee) {
       const account = await db.select({ id: accounts.id })
         .from(accounts)
@@ -326,7 +310,7 @@ app.post('/parse', async (c) => {
         .limit(1);
 
       await db.insert(transactions).values({
-        id: uuidv4(), // Generate or assign the ID here
+        id: uuidv4(),
         date: new Date(transactionData.date),
         accountId: account[0]?.id,
         categoryId: category[0]?.id,
