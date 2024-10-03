@@ -1,7 +1,6 @@
 import { DataCharts } from "@/components/data-charts";
 import { DataGrid } from "@/components/data-grid";
 import Chat from "@/components/chat";
-import VoiceInputComponent from "@/components/VoiceInputComponent";
 
 export default function DashboardPage() {
   return(
