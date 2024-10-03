@@ -4,8 +4,8 @@ import React, { useState, ChangeEvent, FormEvent, useRef, useEffect } from "reac
 import InputForm from "@/components/inputForm";
 import Messages from "@/components/messages";
 import { Message, useChat } from "ai/react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"; // Import FontAwesomeIcon
-import { faMicrophone, faMicrophoneSlash } from "@fortawesome/free-solid-svg-icons"; // Import microphone icons
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faMicrophone, faMicrophoneSlash } from "@fortawesome/free-solid-svg-icons";
 
 interface AIPanelProps {
   isOpen: boolean;
@@ -14,10 +14,10 @@ interface AIPanelProps {
 
 const AIPanel: React.FC<AIPanelProps> = ({ isOpen, onClose }) => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [inputMessage, setInputMessage] = useState("");
+  const [inputMessage, setInputMessage] = useState("");  // Final text message
+  const [interimText, setInterimText] = useState("");  // Live transcription text
   const { isLoading, stop } = useChat({ api: "api/ai" });
 
-  // Speech recognition
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
@@ -28,23 +28,38 @@ const AIPanel: React.FC<AIPanelProps> = ({ isOpen, onClose }) => {
     }
 
     recognitionRef.current = new window.webkitSpeechRecognition();
-    recognitionRef.current.continuous = false;
-    recognitionRef.current.interimResults = false;
+    recognitionRef.current.continuous = true;  // Keep listening even if user pauses
+    recognitionRef.current.interimResults = true;  // Show live results as speaking
 
-    recognitionRef.current.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setInputMessage(transcript);
-      stopListening(); // Stop listening after getting the input
+    recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
+      let interimTranscript = "";
+      let finalTranscript = inputMessage; // Start with the current message
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript.trim();  // Trim spaces around results
+        if (event.results[i].isFinal) {
+          // If the message doesn't end with a space, add one
+          if (finalTranscript && !finalTranscript.endsWith(" ")) {
+            finalTranscript += " ";
+          }
+          finalTranscript += transcript;
+        } else {
+          interimTranscript += transcript;  // Show interim (live) text
+        }
+      }
+
+      setInputMessage(finalTranscript);
+      setInterimText(interimTranscript);  // Show live transcription text
     };
 
     recognitionRef.current.onend = () => {
-      setIsListening(false);
+      setIsListening(false);  // Set state to not listening when the recognition ends
     };
 
     return () => {
-      recognitionRef.current?.abort(); // Clean up on unmount
+      recognitionRef.current?.abort(); // Clean up on component unmount
     };
-  }, []);
+  }, [inputMessage]);
 
   const addMessage = (newMessage: Message) => {
     setMessages((prevMessages) => [...prevMessages, newMessage]);
@@ -65,6 +80,7 @@ const AIPanel: React.FC<AIPanelProps> = ({ isOpen, onClose }) => {
 
     addMessage(newMessage);
     setInputMessage("");
+    setInterimText("");
 
     const isCommandRequest = /^(add account|create account|create new account|add new account|add category|create category|add new category|create new category)/i.test(inputMessage);
     const requestBody = isCommandRequest 
@@ -143,7 +159,7 @@ const AIPanel: React.FC<AIPanelProps> = ({ isOpen, onClose }) => {
         <Messages messages={messages} isLoading={isLoading} />
       </div>
       <InputForm
-        input={inputMessage}
+        input={inputMessage + interimText}  // Display final and interim text together
         handleInputChange={handleInputChange}
         handleSubmit={handleSubmit}
         isLoading={isLoading}
