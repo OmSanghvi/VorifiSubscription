@@ -10,7 +10,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Vorifi",
-  description: "Personal Financial Advisor",
+  description: "Personal Financial Manager",
 };
 
 export default function RootLayout({
