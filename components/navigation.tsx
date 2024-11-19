@@ -45,7 +45,7 @@ export const Navigation = () => {
     };
     if(isMobile){
         return (
-            <div className="relative mr-24 flex items-center justify-between px-4 py-2 bg-transparent">
+            <div className="relative mr-17 flex items-center justify-between px-4 py-2 bg-transparent">
                 {/* Menu Icon */}
                 <Sheet open={isOpen} onOpenChange={setIsOpen}>
                     <SheetTrigger>
@@ -74,7 +74,7 @@ export const Navigation = () => {
                 </Sheet>
 
                 {/* Center Content */}
-                <div className="mr-20 flex items-center ml-8">
+                <div className="mr-20 flex items-center ml-6">
                     <Image src = "/logo.svg" alt = "Logo" height={28} width={28}/>
                     <span className="text-lg font-medium text-white">Vorifi</span>
                 </div>
