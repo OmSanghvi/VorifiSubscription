@@ -8,6 +8,13 @@
       "when": 1727635773768,
       "tag": "0000_giant_diamondback",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1732501254788,
+      "tag": "0001_famous_wendigo",
+      "breakpoints": true
     }
   ]
 }
