@@ -1,3 +1,4 @@
+const crypto = require('crypto-js');
 import { Hono } from "hono";
 import { eq } from "drizzle-orm";
 
@@ -14,7 +15,7 @@ import { db } from "@/db/drizzle";
 import { setupLemon } from "@/lib/ls";
 import { subscriptions } from "@/db/schema";
 import { createId } from "@paralleldrive/cuid2";
-import CryptoJS from "crypto-js";
+
 setupLemon();
 
 const app = new Hono()
@@ -98,12 +99,21 @@ const app = new Hono()
         "/webhook",
         async (c) => {
             const text = await c.req.text();
-            const hmac = CryptoJS.HmacSHA256(text, process.env.LEMONSQUEEZY_WEBHOOK_SECRET!);
-            const digest = CryptoJS.enc.Hex.stringify(hmac);
 
-            const signature = c.req.header("x-signature") as string;
+            const hmac = crypto.createHmac(
+                "sha256",
+                process.env.LEMONSQUEEZY_WEBHOOK_SECRET!
+            );
+            const digest = Buffer.from(
+                hmac.update(text).digest("hex"),
+                "utf-8"
+            );
+            const signature = Buffer.from(
+                c.req.header("x-signature") as string,
+                "utf8"
+            );
 
-            if (digest !== signature) {
+            if (!crypto.timingSafeEqual(digest, signature)) {
                 return c.json({ error: "Unauthorized" }, 401);
             }
 
@@ -114,7 +124,7 @@ const app = new Hono()
             const userId = payload.meta.custom_data.user_id;
             const status = payload.data.attributes.status;
 
-            if (event === "subscription_created") {
+            if (event === "order_created") {
                 await db
                     .insert(subscriptions)
                     .values({
@@ -125,7 +135,7 @@ const app = new Hono()
                     });
             }
 
-            if (event === "subscription_updated") {
+            if (event === "order_updated") {
                 await db
                     .insert(subscriptions)
                     .values({
