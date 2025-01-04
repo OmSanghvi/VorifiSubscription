@@ -15,6 +15,20 @@
       "when": 1732501254788,
       "tag": "0001_famous_wendigo",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1736017823431,
+      "tag": "0002_peaceful_whistler",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1736017858186,
+      "tag": "0003_boring_masque",
+      "breakpoints": true
     }
   ]
 }

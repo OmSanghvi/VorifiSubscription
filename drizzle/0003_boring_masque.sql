@@ -1,0 +1,1 @@
+ALTER TABLE "connected_banks" RENAME COLUMN "user_id" TO "userId";
