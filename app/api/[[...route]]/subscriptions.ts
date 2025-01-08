@@ -129,8 +129,8 @@ const app = new Hono()
                     .insert(subscriptions)
                     .values({
                         id: createId(),
-                        subscriptionId,
                         userId,
+                        subscriptionId,
                         status,
                     });
             }
@@ -140,8 +140,8 @@ const app = new Hono()
                     .insert(subscriptions)
                     .values({
                         id: createId(),
-                        subscriptionId,
                         userId,
+                        subscriptionId,
                         status,
                     });
             }
