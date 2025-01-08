@@ -6,7 +6,7 @@ import { useMutation } from '@tanstack/react-query';
 import { client } from '@/lib/hono';
 
 type ResponseType = InferResponseType<
-    (typeof client.api.subscriptions.checkout)['$post'],
+    typeof client.api.subscriptions.checkout['$post'],
     200
 >;
 
@@ -25,7 +25,7 @@ export const useCheckoutSubscription = () => {
             window.location.href = data;
         },
         onError: () => {
-            toast.error('Failed to create URL');
+            toast.error('Faild to create URL');
         },
     });
 
