@@ -124,7 +124,7 @@ const app = new Hono()
             const userId = payload.meta.custom_data.user_id;
             const status = payload.data.attributes.status;
 
-            if (event === "subscription_created") {
+            if (event === "order_created") {
                 await db
                     .insert(subscriptions)
                     .values({
